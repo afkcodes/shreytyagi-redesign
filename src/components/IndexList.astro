@@ -1,0 +1,37 @@
+---
+import { SECTIONS, dateShort, iso, label, sectionOf, urlOf, type Entry } from '../lib/site';
+
+interface Props {
+  entries: Entry[];
+  /** Group rows by year (default) or by category. */
+  by?: 'year' | 'category';
+  /** What the right-hand column says. */
+  meta?: 'section' | 'category' | 'rows';
+  rowCounts?: Record<string, number>;
+}
+const { entries, by = 'year', meta = 'section', rowCounts = {} } = Astro.props;
+const groups = new Map<string, Entry[]>();
+for (const e of entries) {
+  const k = by === 'year' ? String(e.data.date.getUTCFullYear()) : e.data.category;
+  groups.set(k, [...(groups.get(k) ?? []), e]);
+}
+const right = (e: Entry) =>
+  meta === 'section' ? SECTIONS[sectionOf(e)].one : meta === 'rows' ? `${(rowCounts[e.id] ?? 0).toLocaleString('en-GB')} rows` : e.data.category;
+---
+{[...groups].map(([k, list]) => (
+  <section class="grp">
+    <h2 class="gh">{k}<span>{list.length}</span></h2>
+    <ol class="rows">
+      {list.map(e => (
+        <li>
+          <a class="row" href={urlOf(e)}>
+            <time datetime={iso(e.data.date)}>{dateShort(e.data.date)}</time>
+            <span class="t">{label(e)}</span>
+            <span class="m">{right(e)}</span>
+          </a>
+        </li>
+      ))}
+    </ol>
+  </section>
+))}
+{!entries.length && <p class="sub">Nothing here yet.</p>}

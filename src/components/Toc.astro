@@ -1,0 +1,30 @@
+---
+import type { MarkdownHeading } from 'astro';
+
+interface Props { headings: MarkdownHeading[] }
+const items = Astro.props.headings.filter(h => h.depth === 2);
+---
+{items.length >= 3 && (
+  <aside class="toc">
+    <nav aria-label="On this page">
+      <p>On this page</p>
+      <ol>{items.map(h => <li><a href={`#${h.slug}`}>{h.text}</a></li>)}</ol>
+    </nav>
+  </aside>
+)}
+<script>
+  // highlight the section being read
+  const links = [...document.querySelectorAll<HTMLAnchorElement>('.toc a')];
+  if (links.length && 'IntersectionObserver' in window) {
+    const targets = links.map(a => document.getElementById(decodeURIComponent(a.hash.slice(1)))).filter((h): h is HTMLElement => !!h);
+    const visible = new Set<Element>();
+    const io = new IntersectionObserver(entries => {
+      for (const e of entries) e.isIntersecting ? visible.add(e.target) : visible.delete(e.target);
+      const firstVisible = targets.find(t => visible.has(t));
+      const passed = targets.filter(t => t.getBoundingClientRect().top < innerHeight * 0.3).pop();
+      const current = firstVisible ?? passed;
+      links.forEach(a => a.setAttribute('aria-current', String(a.hash.slice(1) === current?.id)));
+    }, { rootMargin: '-64px 0px -60% 0px' });
+    targets.forEach(t => io.observe(t));
+  }
+</script>

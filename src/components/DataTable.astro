@@ -1,0 +1,62 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { collator, loadTable } from '../lib/site';
+
+interface Props { entry: CollectionEntry<'lists'> }
+const { entry } = Astro.props;
+const t = loadTable(entry);
+const sortCol = entry.data.sort ? t.head.indexOf(entry.data.sort) : -1;
+if (entry.data.sort && sortCol < 0) {
+  throw new Error(`${entry.id}: sort column "${entry.data.sort}" is not in ${entry.data.data} (${t.head.join(', ')})`);
+}
+const dir = sortCol < 0 ? 0 : entry.data.order === 'desc' ? -1 : 1;
+const order = t.rows.map((_, i) => i);
+if (dir) {
+  order.sort((a, b) => {
+    const x = t.text[a][sortCol], y = t.text[b][sortCol];
+    if (!x || !y) return x ? -1 : y ? 1 : 0;
+    return collator.compare(x, y) * dir;
+  });
+}
+// wide tables pin the first column (and a leading # column's neighbour)
+const stick = t.wide ? (t.num[0] && t.head.length > 1 ? 2 : 1) : 0;
+const pin = (c: number) => (c < stick ? `s${c}${c === stick - 1 ? ' edge' : ''}` : '');
+const cls = (c: number, rep: boolean) => [pin(c), t.num[c] && 'num', t.mono[c] && 'mono', rep && 'rep'].filter(Boolean).join(' ') || undefined;
+const count = t.rows.length.toLocaleString('en-GB');
+---
+<div class="tbar">
+  <label class="filter">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+    <input type="search" placeholder={`Filter ${count} rows`} aria-label="Filter rows">
+  </label>
+  <span class="count" aria-live="polite">{count} rows</span>
+</div>
+<div class:list={['dt', { scroll: t.wide }]} data-table data-stick={stick}>
+  <table class="data" data-sort={sortCol} data-dir={dir}>
+    <thead>
+      <tr>
+        {t.head.map((h, c) => (
+          <th scope="col" class={[pin(c), t.num[c] && 'num'].filter(Boolean).join(' ') || undefined}
+              aria-sort={dir && c === sortCol ? (dir > 0 ? 'ascending' : 'descending') : undefined}>
+            <button type="button" data-col={c}><Fragment set:html={h || '#'} /><span class="ar" aria-hidden="true"></span></button>
+          </th>
+        ))}
+      </tr>
+    </thead>
+    <tbody>
+      {order.map((i, n) => {
+        const prev = n ? t.rows[order[n - 1]] : null;
+        return (
+          <tr data-i={i}>
+            {t.rows[i].map((v, c) => <td class={cls(c, !!prev && !!v && c >= stick && prev[c] === v)} set:html={v} />)}
+          </tr>
+        );
+      })}
+    </tbody>
+  </table>
+</div>
+
+<script>
+  import { enhanceTable } from '../scripts/table';
+  document.querySelectorAll<HTMLElement>('[data-table]').forEach(enhanceTable);
+</script>

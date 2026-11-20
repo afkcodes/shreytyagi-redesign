@@ -1,0 +1,16 @@
+---
+import { getCollection } from 'astro:content';
+import EntryPage from '../../../components/EntryPage.astro';
+
+/** Folder pages, e.g. content/articles/youtube_av1_encoding/index.md -> /articles/youtube_av1_encoding/ */
+export async function getStaticPaths() {
+  const [posts, lists] = await Promise.all([getCollection('posts', e => !e.data.draft), getCollection('lists', e => !e.data.draft)]);
+  return [...posts, ...lists]
+    .filter(e => /^[^/]+\/[^/]+\/index$/.test(e.id))
+    .map(entry => {
+      const [section, folder] = entry.id.split('/');
+      return { params: { section, folder }, props: { entry } };
+    });
+}
+---
+<EntryPage entry={Astro.props.entry} />

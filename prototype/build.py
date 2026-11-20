@@ -19,7 +19,7 @@ from pathlib import Path
 from urllib.parse import quote, urljoin, urlparse
 
 ROOT = Path(__file__).parent
-SRC = ROOT / 'source'
+SRC = ROOT.parent / 'source'
 LIVE = 'https://shreytyagi.com'
 ASSETS = ROOT / 'assets'
 

@@ -1,0 +1,14 @@
+---
+import Base from '../layouts/Base.astro';
+import IndexList from '../components/IndexList.astro';
+import { allEntries } from '../lib/site';
+
+const entries = await allEntries();
+---
+<Base>
+  <header class="home">
+    <p class="lede">Articles, lists and tools about cinema technology — IMAX, Dolby Cinema, HDR, 3D and encoding.</p>
+    <p class="lede-2">Not a typical personal website: the point is to publish information and ideas that add value, not a summary of me. <a href="/about.html">More about me</a>.</p>
+  </header>
+  <IndexList entries={entries} />
+</Base>

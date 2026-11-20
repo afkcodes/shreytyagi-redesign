@@ -1,0 +1,29 @@
+---
+import { getEntry, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+const page = (await getEntry('pages', 'about'))!;
+const { Content } = await render(page);
+const youtube = [
+  ['Shrey Tyagi', 'UCCJT8WfnCjflckjAoxxCoiA'], ['Shrey Tyagi (2nd Channel)', 'UCI89YThnnAIir0RLnpznyog'],
+  ['4K Clips And Trailers', 'UCBgc_s9bZcC7_VPC7Qyegfw'], ['3D Clips And Trailers', 'UCnv-wyenxwz2LZtSRwVNWNg'],
+  ['8K Clips And Trailers', 'UCc_lxgyKjvxO-lHHa03pUhw'], ['mp4dump', 'UCqIm5-PSK5YDFM_cAbdFqrA'], ['amateur singer', 'UCx56_WYLdDB3tEPycBCai_g'],
+].map(([t, id]) => [t, `https://www.youtube.com/channel/${id}`]);
+const social = [['X', 'https://x.com/iamshreytyagi'], ['Instagram', 'https://instagram.com/iamshreytyagi'], ['Facebook', 'https://facebook.com/iamshreytyagi'],
+  ['BeReal', 'https://BeRe.al/shreytyagi'], ['Reddit', 'https://reddit.com/user/shreytyagi'], ['Snapchat', 'https://snapchat.com/add/shreytyagi']];
+const work = [['LinkedIn', 'https://linkedin.com/in/iamshreytyagi'], ['GitHub', 'https://github.com/shreytyagi'], ['Quora', 'https://quora.com/profile/Shrey-Tyagi']];
+const groups = [['YouTube', youtube], ['Social', social], ['Work', work]] as const;
+---
+<Base title={page.data.title}>
+  <header class="ph"><h1>{page.data.title}</h1></header>
+  <div class="prose"><Content /><h2>Elsewhere</h2></div>
+  <dl class="el">
+    {groups.map(([name, links]) => (
+      <>
+        <dt>{name}</dt>
+        <dd>{links.map(([t, u]) => <a href={u} rel="noopener">{t}</a>)}</dd>
+      </>
+    ))}
+    <dt>Email</dt><dd><a href="mailto:business@shreytyagi.com">business@shreytyagi.com</a></dd>
+  </dl>
+</Base>

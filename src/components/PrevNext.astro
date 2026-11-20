@@ -1,0 +1,16 @@
+---
+import { SECTIONS, label, sectionOf, urlOf, type Entry } from '../lib/site';
+
+interface Props { entry: Entry; all: Entry[] }
+const { entry, all } = Astro.props;
+const same = all.filter(e => sectionOf(e) === sectionOf(entry));
+const i = same.findIndex(e => e.id === entry.id);
+const newer = same[i - 1];
+const older = same[i + 1];
+---
+{(newer || older) && (
+  <nav class="pn" aria-label={`More ${SECTIONS[sectionOf(entry)].name.toLowerCase()}`}>
+    {newer && <a class="prev" href={urlOf(newer)}><small>← Newer</small><span>{label(newer)}</span></a>}
+    {older && <a class="next" href={urlOf(older)}><small>Older →</small><span>{label(older)}</span></a>}
+  </nav>
+)}

@@ -1,0 +1,90 @@
+---
+import '@fontsource-variable/figtree';
+import '@fontsource/dm-mono/400.css';
+import '@fontsource/dm-mono/500.css';
+import '../styles/global.css';
+import { SECTIONS } from '../lib/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Wide pages (big tables) let the header and main column grow. */
+  wide?: boolean;
+  /** Thin reading-progress bar for long reads. */
+  progress?: boolean;
+  /** Load KaTeX styles (only pages with formulas). */
+  math?: boolean;
+}
+const { title, description = 'Articles, lists and tools about cinema technology: IMAX, Dolby Cinema, HDR, 3D and encoding.', wide = false, progress = false, math = false } = Astro.props;
+const section = Astro.url.pathname.split('/')[1];
+const full = title ? `${title} — Shrey Tyagi` : 'Shrey Tyagi';
+const nav = [...Object.entries(SECTIONS).map(([k, s]) => [`/${k}/`, s.name, k] as const), ['/about.html', 'About', 'about.html'] as const];
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{full}</title>
+  <meta name="description" content={description}>
+  <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)}>
+  <meta property="og:title" content={title ?? 'Shrey Tyagi'}>
+  <meta property="og:description" content={description}>
+  <meta name="theme-color" content="#f0ece3">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  {math && <link rel="stylesheet" href="/katex/katex.min.css">}
+  <script is:inline>
+    try { var t = localStorage.getItem('st-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  {progress && <div class="progress" aria-hidden="true"></div>}
+  <header class="bar">
+    <div class:list={['wrap bar-in', { 'is-wide': wide }]}>
+      <a class="brand" href="/"><span class="seal" aria-hidden="true">ST</span>Shrey Tyagi</a>
+      <nav class="nav" aria-label="Sections">
+        {nav.map(([href, name, key]) => <a href={href} aria-current={section === key ? 'page' : undefined}>{name}</a>)}
+      </nav>
+      <div class="tools">
+        <button class="icon-btn search" type="button" data-open-search aria-label="Search" aria-keyshortcuts="/ Meta+K">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+          <kbd>/</kbd>
+        </button>
+        <button class="icon-btn" type="button" id="theme" aria-label="Switch theme">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor" stroke="none"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1" class:list={['wrap', { 'is-wide': wide }]}>
+    <slot />
+  </main>
+
+  <footer class="wrap foot">
+    <span>© {new Date().getFullYear()} Shrey Tyagi</span>
+    <nav aria-label="Elsewhere">
+      <a href="https://www.youtube.com/channel/UCCJT8WfnCjflckjAoxxCoiA" rel="noopener">YouTube</a>
+      <a href="https://instagram.com/iamshreytyagi" rel="noopener">Instagram</a>
+      <a href="https://x.com/iamshreytyagi" rel="noopener">X</a>
+      <a href="https://linkedin.com/in/iamshreytyagi" rel="noopener">LinkedIn</a>
+    </nav>
+  </footer>
+
+  <dialog class="sd" id="search" aria-label="Search">
+    <div class="sh">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+      <input id="q" type="search" placeholder="Search articles, lists, tools…" autocomplete="off" spellcheck="false" aria-controls="res" aria-autocomplete="list">
+      <kbd>esc</kbd>
+    </div>
+    <ul class="res" id="res" role="listbox" aria-label="Results"></ul>
+    <div class="sf"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>↵</kbd> open</span><span>searches inside every page and table</span></div>
+  </dialog>
+
+  <script>
+    import '../scripts/chrome';
+    import '../scripts/search';
+  </script>
+</body>
+</html>

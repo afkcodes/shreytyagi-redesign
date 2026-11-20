@@ -1,0 +1,44 @@
+---
+import { asset } from '../lib/site';
+
+interface Props { photos: { src: string; thumb?: string; caption?: string }[] }
+const photos = Astro.props.photos.map(p => ({ src: asset(p.src), thumb: asset(p.thumb ?? p.src), caption: p.caption ?? '' }));
+---
+<div class="gallery" data-photos={JSON.stringify(photos)}>
+  {photos.map((p, i) => (
+    <button type="button" data-i={i} aria-label={`Open photo ${i + 1}${p.caption ? ': ' + p.caption : ''}`}>
+      <span class="n">{i + 1}</span>
+      <img src={p.thumb} alt={p.caption} loading="lazy" decoding="async" onerror="this.remove()">
+    </button>
+  ))}
+</div>
+<dialog class="lb" aria-label="Photo">
+  <div class="lb-top"><span class="lb-n"></span><button type="button" data-close aria-label="Close">✕</button></div>
+  <img alt="">
+  <button type="button" class="prev" aria-label="Previous photo">‹</button>
+  <button type="button" class="next" aria-label="Next photo">›</button>
+</dialog>
+<script>
+  const grid = document.querySelector<HTMLElement>('.gallery');
+  const lb = document.querySelector<HTMLDialogElement>('.lb');
+  if (grid && lb) {
+    const photos: { src: string; caption: string }[] = JSON.parse(grid.dataset.photos!);
+    const img = lb.querySelector('img')!, n = lb.querySelector('.lb-n')!;
+    let i = 0;
+    const show = (k: number) => {
+      i = (k + photos.length) % photos.length;
+      img.src = photos[i].src;
+      img.alt = photos[i].caption || `Photo ${i + 1}`;
+      n.textContent = `${i + 1} / ${photos.length}`;
+    };
+    grid.addEventListener('click', e => {
+      const b = (e.target as Element).closest<HTMLElement>('[data-i]');
+      if (b) { show(+b.dataset.i!); lb.showModal(); }
+    });
+    lb.querySelector('.prev')!.addEventListener('click', () => show(i - 1));
+    lb.querySelector('.next')!.addEventListener('click', () => show(i + 1));
+    lb.querySelector('[data-close]')!.addEventListener('click', () => lb.close());
+    lb.addEventListener('keydown', e => { if (e.key === 'ArrowLeft') show(i - 1); if (e.key === 'ArrowRight') show(i + 1); });
+    lb.addEventListener('close', () => img.removeAttribute('src'));
+  }
+</script>

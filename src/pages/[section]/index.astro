@@ -1,0 +1,25 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import IndexList from '../../components/IndexList.astro';
+import { SECTIONS, allEntries, loadTable, sectionOf, type Section } from '../../lib/site';
+
+export function getStaticPaths() {
+  return Object.keys(SECTIONS).map(section => ({ params: { section } }));
+}
+
+const section = Astro.params.section as Section;
+const entries = (await allEntries()).filter(e => sectionOf(e) === section);
+const isLists = section === 'lists';
+const rowCounts = isLists
+  ? Object.fromEntries(entries.map(e => [e.id, loadTable(e as CollectionEntry<'lists'>).rows.length]))
+  : {};
+const s = SECTIONS[section];
+---
+<Base title={s.name} description={s.blurb}>
+  <header class="ph">
+    <h1>{s.name}</h1>
+    <p class="sub">{s.blurb}</p>
+  </header>
+  <IndexList entries={entries} by={isLists ? 'category' : 'year'} meta={isLists ? 'rows' : 'category'} rowCounts={rowCounts} />
+</Base>

@@ -5,3 +5,7 @@ source/
 .claude/
 .DS_Store
 __pycache__/
+node_modules/
+dist/
+.astro/
+scripts/migrate/.extracted.json

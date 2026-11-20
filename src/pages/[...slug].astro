@@ -1,0 +1,11 @@
+---
+import { getCollection } from 'astro:content';
+import EntryPage from '../components/EntryPage.astro';
+
+/** Every page at /<section>/<name>.html. Folder pages (…/index.md) have their own route. */
+export async function getStaticPaths() {
+  const [posts, lists] = await Promise.all([getCollection('posts', e => !e.data.draft), getCollection('lists', e => !e.data.draft)]);
+  return [...posts, ...lists].filter(e => !e.id.endsWith('/index')).map(entry => ({ params: { slug: entry.id }, props: { entry } }));
+}
+---
+<EntryPage entry={Astro.props.entry} />
