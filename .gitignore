@@ -1,0 +1,7 @@
+# the original site, cloned locally to build from
+source/
+
+# local tooling
+.claude/
+.DS_Store
+__pycache__/
