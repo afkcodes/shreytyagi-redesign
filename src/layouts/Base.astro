@@ -14,8 +14,10 @@ interface Props {
   progress?: boolean;
   /** Load KaTeX styles (only pages with formulas). */
   math?: boolean;
+  /** URL of this page's Markdown copy, for agents. */
+  markdown?: string;
 }
-const { title, description = 'Articles, lists and tools about cinema technology: IMAX, Dolby Cinema, HDR, 3D and encoding.', wide = false, progress = false, math = false } = Astro.props;
+const { title, description = 'Articles, lists and tools about cinema technology: IMAX, Dolby Cinema, HDR, 3D and encoding.', wide = false, progress = false, math = false, markdown } = Astro.props;
 const section = Astro.url.pathname.split('/')[1];
 const full = title ? `${title} — Shrey Tyagi` : 'Shrey Tyagi';
 const nav = [...Object.entries(SECTIONS).map(([k, s]) => [`/${k}/`, s.name, k] as const), ['/about.html', 'About', 'about.html'] as const];
@@ -30,11 +32,18 @@ const nav = [...Object.entries(SECTIONS).map(([k, s]) => [`/${k}/`, s.name, k] a
   <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)}>
   <meta property="og:title" content={title ?? 'Shrey Tyagi'}>
   <meta property="og:description" content={description}>
-  <meta name="theme-color" content="#f0ece3">
+  <!-- palette:start: first-paint browser bar colour; chrome.ts syncs it to the theme --><meta name="theme-color" content="#f0ece3"><!-- palette:end -->
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="describedby" type="text/plain" href="/llms.txt">
+  {markdown && <link rel="alternate" type="text/markdown" href={markdown}>}
+  <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+  <slot name="head" />
   {math && <link rel="stylesheet" href="/katex/katex.min.css">}
   <script is:inline>
     try { var t = localStorage.getItem('st-theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
+    // a page transition that can't run (hidden tab, quick back/forward) rejects quietly
+    var quiet = function (e) { var v = e.viewTransition; if (v) { v.ready.catch(function () {}); v.finished.catch(function () {}); } };
+    addEventListener('pagereveal', quiet); addEventListener('pageswap', quiet);
   </script>
 </head>
 <body>
@@ -44,7 +53,9 @@ const nav = [...Object.entries(SECTIONS).map(([k, s]) => [`/${k}/`, s.name, k] a
     <div class:list={['wrap bar-in', { 'is-wide': wide }]}>
       <a class="brand" href="/"><span class="seal" aria-hidden="true">ST</span>Shrey Tyagi</a>
       <nav class="nav" aria-label="Sections">
-        {nav.map(([href, name, key]) => <a href={href} aria-current={section === key ? 'page' : undefined}>{name}</a>)}
+        {nav.map(([href, name, key]) => (
+          <a href={href} aria-current={section === key ? 'page' : undefined}>{name}{section === key && <span class="mark" aria-hidden="true" />}</a>
+        ))}
       </nav>
       <div class="tools">
         <button class="icon-btn search" type="button" data-open-search aria-label="Search" aria-keyshortcuts="/ Meta+K">

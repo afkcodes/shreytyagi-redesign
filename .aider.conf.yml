@@ -1,0 +1,6 @@
+# Aider doesn't discover AGENTS.md on its own; load the project rules read-only.
+read:
+  - AGENTS.md
+  - DESIGN.md
+  - src/content/AGENTS.md
+  - src/AGENTS.md

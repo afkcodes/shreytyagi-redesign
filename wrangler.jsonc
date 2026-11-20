@@ -1,0 +1,16 @@
+// Cloudflare Workers config: a static site, no Worker code. See DEPLOY.md.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // Must match the project name you pick in the Cloudflare dashboard.
+  "name": "shreytyagi",
+  "compatibility_date": "2026-11-17",
+  "assets": {
+    "directory": "./dist",
+    // Serve files exactly as named, so /about.html never redirects to /about.
+    // Folder URLs (/articles/) and old extensionless links come from dist/_redirects,
+    // which the build writes (astro.config.mjs).
+    "html_handling": "none",
+    // Missing pages get dist/404.html with a real 404 status.
+    "not_found_handling": "404-page"
+  }
+}

@@ -27,10 +27,22 @@ document.querySelector('.skip')?.addEventListener('click', e => {
 const meta = document.querySelector('meta[name="theme-color"]')!;
 const paint = () => meta.setAttribute('content', getComputedStyle(document.body).backgroundColor);
 const isDark = () => (root.dataset.theme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark';
-document.getElementById('theme')!.addEventListener('click', () => {
+const toggle = document.getElementById('theme')!;
+toggle.addEventListener('click', () => {
   const t = isDark() ? 'light' : 'dark';
-  root.dataset.theme = t;
-  try { localStorage.setItem('st-theme', t); } catch {}
-  paint();
+  const apply = () => {
+    root.dataset.theme = t;
+    try { localStorage.setItem('st-theme', t); } catch {}
+    paint();
+  };
+  if (!document.startViewTransition || matchMedia('(prefers-reduced-motion: reduce)').matches) return apply();
+  // the new theme spreads like ink from the button (CSS: hj-ink in global.css)
+  const r = toggle.getBoundingClientRect();
+  const x = r.left + r.width / 2, y = r.top + r.height / 2;
+  root.style.setProperty('--ink-x', `${x}px`);
+  root.style.setProperty('--ink-y', `${y}px`);
+  root.style.setProperty('--ink-r', `${Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))}px`);
+  root.classList.add('theme-vt');
+  document.startViewTransition(apply).finished.finally(() => root.classList.remove('theme-vt'));
 });
 paint();

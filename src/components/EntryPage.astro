@@ -6,7 +6,7 @@ import Gallery from './Gallery.astro';
 import PrevNext from './PrevNext.astro';
 import Toc from './Toc.astro';
 import Tools from './Tools.astro';
-import { SECTIONS, allEntries, dateLong, description, iso, loadTable, readingMinutes, sectionOf, type Entry } from '../lib/site';
+import { SECTIONS, SITE, allEntries, dateLong, description, iso, loadTable, mdUrlOf, readingMinutes, sectionOf, urlOf, type Entry } from '../lib/site';
 
 interface Props { entry: Entry }
 const { entry } = Astro.props;
@@ -19,8 +19,19 @@ const math = /\$\$/.test(entry.body ?? '');
 const wide = isList && loadTable(entry as CollectionEntry<'lists'>).wide;
 const rows = isList ? loadTable(entry as CollectionEntry<'lists'>).rows.length : 0;
 const photos = entry.collection === 'posts' ? entry.data.photos : undefined;
+const jsonld = {
+  '@context': 'https://schema.org',
+  '@type': isList ? 'Dataset' : section === 'blogs' ? 'BlogPosting' : 'Article',
+  [isList ? 'name' : 'headline']: entry.data.title,
+  description: description(entry.body),
+  datePublished: iso(entry.data.date),
+  url: SITE + urlOf(entry),
+  author: { '@type': 'Person', name: 'Shrey Tyagi', url: SITE + '/about.html' },
+  ...(isList ? { distribution: { '@type': 'DataDownload', encodingFormat: 'text/csv', contentUrl: `${SITE}/${entry.id}.csv` } } : {}),
+};
 ---
-<Base title={entry.data.title} description={description(entry.body)} wide={wide} progress={!isList && mins >= 3} math={math}>
+<Base title={entry.data.title} description={description(entry.body)} wide={wide} progress={!isList && mins >= 3} math={math} markdown={mdUrlOf(entry)}>
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(jsonld)} />
   <article class="post">
     <header class="ph">
       <p class="crumb"><a href={`/${section}/`}>{SECTIONS[section].name}</a><i>/</i><span>{entry.data.category}</span></p>

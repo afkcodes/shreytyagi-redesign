@@ -7,10 +7,32 @@ HTML at the **same URLs as the current site**, so existing links keep working.
 
 ```bash
 npm install
-npm run dev      # local preview with live reload
-npm run build    # static site in dist/ (upload anywhere, e.g. GitHub Pages)
-npm run check    # type-check, plus content validation
+npm run dev            # local preview with live reload
+npm run new -- articles my-article "My Article" --category Cinemas   # start a page
+npm run verify         # type check + build + every guardrail (Cloudflare runs this too)
+npm run preview        # serve the build with Cloudflare's runtime
 ```
+
+**Hosting:** free on Cloudflare, deploying itself on every push to `main`. Step-by-step setup
+for a non-developer is in [`DEPLOY.md`](DEPLOY.md).
+
+## For AI agents
+
+This repository is set up so any coding agent produces the same design and structure:
+
+| File | Read by |
+|---|---|
+| [`AGENTS.md`](AGENTS.md) | The rules: single source of truth. Read natively by Codex, Copilot, Cursor, Windsurf, Jules, Junie, Cline, Roo, Kilo, Amp, OpenHands, Factory, Kiro, Zed and recent Claude Code. |
+| [`DESIGN.md`](DESIGN.md) | The hanji design system: tokens, type, motion, components. |
+| [`src/content/AGENTS.md`](src/content/AGENTS.md), [`src/AGENTS.md`](src/AGENTS.md) | Rules for content and for code; nearest file wins. |
+| `GEMINI.md`, `.gemini/settings.json` | Gemini Code Assist and Gemini CLI, pointed at `AGENTS.md`. |
+| `CLAUDE.md`, `.aider.conf.yml` | Claude Code (older versions) and Aider, pointed at `AGENTS.md`. |
+| `templates/`, `npm run new` | Every new page starts from the right structure. |
+| `npm run verify` | Enforces it all: old URLs, speed budgets, links, alt text, design tokens, agent files. |
+
+The published site is agent-readable too: [`/llms.txt`](https://shreytyagi.com/llms.txt) lists
+every page, each page has a Markdown copy at the same path ending in `.md`, every list's data is
+at `/lists/<name>.csv`, and `/llms-full.txt` has the full text.
 
 ## Writing
 
@@ -95,15 +117,17 @@ utility pages.
 Use the site path (`/articles/x/photo.jpg`). Files in `public/` are served from here;
 anything else is fetched from `PUBLIC_ASSET_BASE`, which defaults to
 `https://shreytyagi.com` while the large photo folders still live on the current site.
-Once they're copied into `public/`, build with `PUBLIC_ASSET_BASE=""`.
+`npm run media:import` copies them all into `public/`; do that before the domain moves
+(`DEPLOY.md`, step 1).
 
 ## How it's built
 
 - `src/content.config.ts`: the content schema (what each frontmatter field means).
 - `src/lib/site.ts`: URLs, dates, CSV parsing, search text.
 - `src/layouts/Base.astro`, `src/components/`: page chrome, index lists, tables, gallery, contents rail.
-- `src/styles/global.css`: hanji tokens (paper and charcoal grounds, scarlet accent, Figtree and DM Mono).
-- `astro.config.mjs`: keeps the old URL shapes, prefetches pages on hover, renders maths at build time.
+- `src/styles/global.css`: hanji tokens (paper and charcoal grounds, scarlet accent, Figtree and DM Mono, hanji springs).
+- `astro.config.mjs`: keeps the old URL shapes, prefetches pages on hover, renders maths at build time, writes `dist/_redirects` for Cloudflare.
+- `wrangler.jsonc`: Cloudflare hosting (see `DEPLOY.md`).
 
 Search (`/` or `⌘K`) reads `/search.json`, generated at build time with the text of every
 page and every table row. It is only downloaded the first time someone opens search.

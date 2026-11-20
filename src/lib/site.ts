@@ -18,8 +18,24 @@ export const label = (e: Entry) => e.data.shortTitle ?? e.data.title;
 
 /** Old site URLs: /articles/x.html, and /articles/x/ for folder pages (index.md). */
 export const urlOf = (e: Entry) => (e.id.endsWith('/index') ? `/${e.id.slice(0, -'index'.length)}` : `/${e.id}.html`);
-/** The route param that makes Astro write that exact file. */
-export const pathOf = (e: Entry) => e.id;
+/** Markdown copy of a page, for agents: same path, ending in .md (llms.txt convention). */
+export const mdUrlOf = (e: Entry) => `/${e.id}.md`;
+/** A list's data as a download. */
+export const csvUrlOf = (e: CollectionEntry<'lists'>) => `/${e.id}.csv`;
+export const SITE = 'https://shreytyagi.com';
+export const SUMMARY = 'Articles, lists and tools about cinema technology — IMAX, Dolby Cinema, HDR, 3D and encoding, mostly in India. First-hand reviews and data by Shrey Tyagi.';
+
+/** The Markdown an agent gets for a page: frontmatter it can trust, then the body as written. */
+export function entryMarkdown(e: Entry) {
+  const lines = ['---', `title: ${JSON.stringify(e.data.title)}`, `date: ${iso(e.data.date)}`, `category: ${JSON.stringify(e.data.category)}`,
+    `section: ${SECTIONS[sectionOf(e)].name}`, `url: ${SITE}${urlOf(e)}`, '---', '', `# ${e.data.title}`, '', (e.body ?? '').trim(), ''];
+  if (e.collection === 'lists') {
+    const t = loadTable(e as CollectionEntry<'lists'>);
+    lines.push(`## Data`, '', `${t.rows.length} rows. Columns: ${t.head.join(', ')}. CSV: ${SITE}${csvUrlOf(e as CollectionEntry<'lists'>)}`, '');
+    if (e.data.note) lines.push(`Note: ${e.data.note}`, '');
+  }
+  return lines.join('\n');
+}
 
 const fmt = (d: Date, o: Intl.DateTimeFormatOptions) => d.toLocaleDateString('en-GB', { timeZone: 'UTC', ...o });
 export const dateShort = (d: Date) => fmt(d, { day: 'numeric', month: 'short' });
