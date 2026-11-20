@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { getCollection, type CollectionEntry } from 'astro:content';
+import { MEDIA_BASE } from '../../site.config.mjs';
 
 export const SECTIONS = {
   articles: { name: 'Articles', one: 'Article', blurb: 'Long reads on cinema formats, reviews and technology.' },
@@ -51,16 +52,15 @@ export async function allEntries(): Promise<Entry[]> {
   return [...posts, ...lists].sort((a, b) => b.data.date.getTime() - a.data.date.getTime() || a.id.localeCompare(b.id));
 }
 
-const ASSET_BASE = import.meta.env.PUBLIC_ASSET_BASE ?? 'https://shreytyagi.com';
 const publicDir = resolve('public');
-/** Site-path media: local if it's in public/, otherwise from the current site. */
+/** Site-path media: from GitHub (site.config.mjs), unless the file is in public/. */
 export function asset(path: string) {
   if (!path.startsWith('/')) return path;
   try {
     readFileSync(resolve(publicDir, '.' + decodeURI(path)));
     return path;
   } catch {
-    return ASSET_BASE + path;
+    return MEDIA_BASE + path;
   }
 }
 

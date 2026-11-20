@@ -12,7 +12,6 @@ const dist = join(root, 'dist');
 const KB = 1024;
 const BUDGET = { js: 12 * KB, html: 64 * KB, search: 150 * KB };
 const ALLOWED_STYLESHEETS = ['/katex/katex.min.css'];
-const ASSET_BASE = process.env.PUBLIC_ASSET_BASE ?? 'https://shreytyagi.com';
 
 const failures = [];
 const warnings = [];
@@ -42,7 +41,6 @@ for (const line of readFileSync(join(root, 'scripts', 'legacy-urls.txt'), 'utf8'
 
 // 2. Every page: structure, budgets, no third-party code, working internal links
 const pages = walk(dist, ['.html']);
-let remote = 0;
 for (const file of pages) {
   const where = relative(dist, file);
   const html = readFileSync(file, 'utf8');
@@ -77,7 +75,6 @@ for (const file of pages) {
   for (const [, attr, url] of html.matchAll(/\s(href|src)="(\/(?!\/)[^"]*)"/g)) {
     if (!existsSync(fileFor(url)) || statSync(fileFor(url)).isDirectory()) fail(where, `broken internal ${attr}: ${url}`);
   }
-  remote += (html.match(new RegExp(`(src|href)="${ASSET_BASE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/[^"]+\\.(jpe?g|png|webp|gif|heic|pdf)"`, 'gi')) || []).length;
 }
 
 // 3. Search index stays small
@@ -112,15 +109,21 @@ for (const file of walk(join(root, 'src'), ['.css', '.astro', '.ts'])) {
   });
 }
 
-// 7. Agent instruction files: one source of truth, nothing that hides it
+// 7. Content media comes from GitHub (site.config.mjs), not the Cloudflare deploy.
+//    public/ holds site assets only, plus graphs that exist nowhere else (grandfathered).
+const PUBLIC_ALLOWED = [/^favicon\.svg$/, /^katex\//, /^articles\/youtube_av1_encoding\/[^/]+\.png$/, /\.DS_Store$/];
+for (const file of walk(join(root, 'public'), [''])) {
+  const rel = relative(join(root, 'public'), file).split('\\').join('/');
+  if (!PUBLIC_ALLOWED.some(re => re.test(rel))) fail(`public/${rel}`, 'content images and downloads live on GitHub (MEDIA_REPO in site.config.mjs), not in public/');
+}
+
+// 8. Agent instruction files: one source of truth, nothing that hides it
 for (const [f, needle] of [['AGENTS.md', 'single source of truth'], ['GEMINI.md', 'AGENTS.md'], ['CLAUDE.md', 'AGENTS.md'], ['.gemini/settings.json', 'AGENTS.md'], ['.aider.conf.yml', 'AGENTS.md']]) {
   if (!existsSync(join(root, f)) || !readFileSync(join(root, f), 'utf8').includes(needle)) fail(f, `must exist and point to AGENTS.md`);
 }
 for (const f of ['.rules', '.cursorrules', '.windsurfrules', '.clinerules', '.github/copilot-instructions.md']) {
   if (existsSync(join(root, f))) fail(f, 'remove it: these tools read AGENTS.md, and this file hides AGENTS.md in some editors (Zed)');
 }
-
-if (remote) warnings.push(`${remote} image/file links still load from ${ASSET_BASE}. Run \`npm run media:import\` before pointing the domain at the new site (see DEPLOY.md).`);
 
 for (const w of warnings) console.warn(`  warning  ${w}`);
 if (failures.length) {

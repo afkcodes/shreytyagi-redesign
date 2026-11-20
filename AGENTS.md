@@ -34,7 +34,7 @@ pages prefetched on hover.
 | `npm run build` | Static site in `dist/`. Always a fresh content build. |
 | `npm run verify` | Type check, build, then every guardrail below. **Must pass before you finish.** Cloudflare runs it on every push and won't deploy if it fails. |
 | `npm run preview` | Serve `dist/` with Cloudflare's own runtime, exactly as production does. |
-| `npm run media:import` | Copy images the content uses into `public/` from the old host. |
+| `npm run media:check` | Confirm every image the content uses exists on GitHub (see `site.config.mjs`). |
 
 ## Map
 
@@ -52,11 +52,12 @@ src/styles/global.css   all CSS; hanji tokens at the top
 public/                 served as-is: images, KaTeX, favicon
 templates/              copy-ready Markdown for each content type (used by `npm run new`)
 scripts/new.mjs         page scaffolder
-scripts/import-media.mjs  copies referenced media into public/
+scripts/media-check.mjs   checks every referenced image exists
 scripts/verify.mjs      guardrails
 scripts/legacy-urls.txt URLs that must keep working forever
 scripts/migrate/        one-off history; never run it again
 prototype/              the earlier single-file prototype; don't edit
+site.config.mjs         where images come from: a GitHub repository, not Cloudflare
 wrangler.jsonc          Cloudflare hosting config (see DEPLOY.md); don't change html_handling
 DEPLOY.md               how the site is hosted and deployed
 ```
@@ -81,7 +82,8 @@ DEPLOY.md               how the site is hosted and deployed
    - HTML per page: at most 64 KB gzipped. CSS is inlined; the only stylesheet file is
      `/katex/katex.min.css`, and only on pages with formulas.
    - `search.json`: at most 150 KB gzipped, loaded only when search opens.
-   - No code or fonts from other origins. Images may come from `PUBLIC_ASSET_BASE`.
+   - No code or fonts from other origins. Content images come from GitHub (`site.config.mjs`),
+     never from the Cloudflare deploy; don't copy them into `public/`.
 6. **Never invent content.** This is a first-hand personal site. Don't make up facts, dates,
    ratings, measurements or data rows. Keep the author's wording; change only what you were
    asked to change, and say what you couldn't verify.

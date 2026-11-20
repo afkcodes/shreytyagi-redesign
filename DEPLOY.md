@@ -23,52 +23,42 @@ slightly; if a label doesn't match, pick the closest one.
    Transfer ownership**) or to make you an admin (**Settings → Collaborators**).
 2. **The login for wherever shreytyagi.com was bought** (the "registrar": GoDaddy, Namecheap,
    Hostinger, BigRock, Squarespace, …).
-3. **A computer with Node.js** for one step (Step 1). Install the "LTS" version from
-   [nodejs.org](https://nodejs.org) if you don't have it. Check it worked by opening Terminal
-   (Mac) or PowerShell (Windows) and running `node -v`; you should see `v22` or higher.
+3. **Optional: a computer with Node.js**, only if you want to run checks or preview the site
+   on your own machine. Install the "LTS" version from [nodejs.org](https://nodejs.org).
+   Nothing in this guide requires it.
 
 ---
 
-## Step 1 — Bring the photos into the repository (once)
+## Step 1 — Keep the photo repository public (nothing to set up)
 
-Today, the article photos (about 88 MB) still load from the **current** shreytyagi.com. When
-the domain moves to the new site in Step 5, those links would point at the new site, which
-doesn't have them yet. This step copies them in. Do it **before** Step 5, while the old site
-is still live.
+The article images, photo sets and downloads (about 88 MB) are **not** uploaded to Cloudflare.
+They stay on GitHub, in the original site's repository **`shreytyagi/shreytyagi`**, and the
+new pages link to them there. Cloudflare only hosts the pages themselves.
 
-In Terminal:
+So, for as long as the site runs:
 
-```bash
-git clone https://github.com/<your-github-name>/<repository-name>.git
-```
+- keep **`shreytyagi/shreytyagi` public**, and don't rename or delete it;
+- keep each image at the path it has today (for example
+  `articles/dhurandhar2inepiqluxonimages/IMG_1976.jpeg`).
 
-```bash
-cd <repository-name>
-```
+If that repository ever moves or gets renamed, change `MEDIA_REPO` in `site.config.mjs` (one
+line) and push.
+
+To confirm every image the site uses is really there, run this on a computer with Node.js
+(optional):
 
 ```bash
 npm install
 ```
 
 ```bash
-npm run media:import
+npm run media:check
 ```
 
-You'll see a line per file, then a summary like `56 copied (88.1 MB)`. One file,
-`/articles/encoding_masterclass/IMG_COVER.jpg`, is reported as not found; it is already
-missing on the current site, so add it back to that folder if you still have it.
-
-Now check everything and publish the photos to GitHub:
-
-```bash
-npm run verify
-```
-
-It should end with `✓ verify passed` and **no** "still load from shreytyagi.com" warning.
-
-```bash
-git add public && git commit -m "content: import media into public/" && git push
-```
+It prints how many files load from GitHub and lists any that are missing. Today one file is
+missing, `articles/encoding_masterclass/IMG_COVER.jpg` (the x265 article's cover). It is
+already missing on the current site; upload it to that folder of `shreytyagi/shreytyagi` if
+you still have it.
 
 ---
 
@@ -185,7 +175,8 @@ Do these one after another; the site may be unreachable for a few minutes in bet
 ## Step 6 — Switch off the old GitHub Pages site
 
 In the **old** repository (`shreytyagi/shreytyagi`): **Settings → Pages**, set **Source** to
-**None** (or **Unpublish site**). Keep the repository itself; it's the history of the old site.
+**None** (or **Unpublish site**). This only stops GitHub from serving the old pages. **Keep the
+repository itself, and keep it public**: the new site's images load from it (Step 1).
 
 You're done.
 
@@ -197,8 +188,11 @@ You're done.
   `main`, and it's live about two minutes later. Small edits can be made on github.com with
   the pencil icon; committing there deploys too.
 - **New page:** `npm run new -- articles my-new-article "My New Article" --category Cinemas`.
-- **New images:** put them in `public/` at the path the page uses (for example
-  `public/articles/my-new-article/photo.jpg`).
+- **New images:** upload them to the `shreytyagi/shreytyagi` repository on github.com (open
+  the folder, **Add file → Upload files**, commit), for example to
+  `articles/my-new-article/photo.jpg`. Then use that path in the page:
+  `![What the photo shows](/articles/my-new-article/photo.jpg)`. They load from GitHub, not
+  Cloudflare.
 - **See exactly what Cloudflare will serve, on your computer:** `npm run build`, then
   `npm run preview`, and open the address it prints.
 
@@ -208,7 +202,7 @@ You're done.
 |---|---|
 | Build failed | **Deployments** → the failed build → read the last lines. `verify` names the file and the rule. Fix it and push again. |
 | "Worker name doesn't match" | The project name in Cloudflare must equal `"name"` in `wrangler.jsonc`. Change one to match the other. |
-| Images missing after the domain moved | Step 1 was skipped, or new images aren't in `public/`. Run `npm run media:import`, commit, push. |
+| An image doesn't show | It isn't in `shreytyagi/shreytyagi` at the path the page uses (paths are case-sensitive: `.JPG` ≠ `.jpg`), or that repository was made private. `npm run media:check` lists what's missing. |
 | The domain shows an old page or an error | DNS can take time. Check **Domains & Routes** shows the domain as **Active**, then wait a little and try a private window. |
 | A page works at `/about` but you want `/about.html` | That's intended: old-style links without `.html` redirect to the `.html` page. |
 | Need to undo a deploy | **Deployments → earlier version → Rollback**. |
@@ -227,6 +221,13 @@ You're done.
 - `dist/_redirects` is written by the build (`astro.config.mjs`). It makes folder URLs
   (`/articles/`) serve their `index.html`, and redirects old extensionless links (`/about`) to
   the `.html` page. Don't edit it by hand.
+- `site.config.mjs`: where images and downloads come from (`MEDIA_REPO`, `MEDIA_BRANCH`,
+  `MEDIA_BASE`). Pages refer to media by site path; the build points those at
+  `raw.githubusercontent.com/shreytyagi/shreytyagi/main`. Files in `public/` are served with the
+  site instead: site assets, and 14 bitrate graphs for the YouTube AV1 article that only exist
+  in this repository (they were embedded inside the old page). To serve those from GitHub too,
+  upload `public/articles/youtube_av1_encoding/*.png` to the same folder in the media repository
+  and move them out of `public/`.
 - `scripts/legacy-urls.txt` lists every URL from the old site; `npm run verify` fails if any
   of them disappears.
 - Tested locally with Cloudflare's own runtime (`npm run preview`): every old URL returns 200

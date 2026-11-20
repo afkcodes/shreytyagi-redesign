@@ -3,14 +3,13 @@ import { existsSync } from 'node:fs';
 import { unified } from '@astrojs/markdown-remark';
 import { defineConfig } from 'astro/config';
 import rehypeKatex from 'rehype-katex';
+import { MEDIA_BASE } from './site.config.mjs';
 import remarkMath from 'remark-math';
 
 /**
- * Images and downloads are referenced by their site path (/articles/x/photo.jpg).
- * Until the big media folders live in public/, anything not found there is served
- * from the current site. Set PUBLIC_ASSET_BASE="" once everything is local.
+ * Images and downloads are referenced by their site path (/articles/x/photo.jpg) and served
+ * from GitHub (MEDIA_BASE, set in site.config.mjs), unless the file is in public/.
  */
-const ASSET_BASE = process.env.PUBLIC_ASSET_BASE ?? 'https://shreytyagi.com';
 /** @param {string} path */
 const isLocalFile = path => existsSync(new URL(`./public${decodeURI(path.split(/[?#]/)[0])}`, import.meta.url));
 
@@ -22,17 +21,17 @@ function rehypeSite() {
       // raw HTML blocks (e.g. inside <letter-generator>) are strings, not elements
       if (node.type === 'raw') {
         node.value = node.value.replace(/\b(src|href)="(\/[^"]+\.(?!html?")\w{2,5})"/g, (/** @type {string} */ m, /** @type {string} */ attr, /** @type {string} */ path) =>
-          isLocalFile(path) ? m : `${attr}="${ASSET_BASE}${path}"`);
+          isLocalFile(path) ? m : `${attr}="${MEDIA_BASE}${path}"`);
       }
       if (node.type === 'element') {
         const p = node.properties;
         if (node.tagName === 'img') {
-          if (typeof p.src === 'string' && p.src.startsWith('/') && !isLocalFile(p.src)) p.src = ASSET_BASE + p.src;
+          if (typeof p.src === 'string' && p.src.startsWith('/') && !isLocalFile(p.src)) p.src = MEDIA_BASE + p.src;
           p.loading = 'lazy';
           p.decoding = 'async';
         }
         if (node.tagName === 'a' && typeof p.href === 'string') {
-          if (/^\/[^#?]*\.(?!html?\b)\w{2,5}([?#]|$)/.test(p.href) && !isLocalFile(p.href)) p.href = ASSET_BASE + p.href;
+          if (/^\/[^#?]*\.(?!html?\b)\w{2,5}([?#]|$)/.test(p.href) && !isLocalFile(p.href)) p.href = MEDIA_BASE + p.href;
           if (/^https?:/.test(p.href) && !p.href.startsWith('https://shreytyagi.com')) p.rel = ['noopener'];
         }
         // wide tables scroll inside the column instead of the page

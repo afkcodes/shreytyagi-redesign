@@ -9,7 +9,7 @@
     "check": "astro check",
     "verify": "astro check && astro build --force && node scripts/verify.mjs",
     "new": "node scripts/new.mjs",
-    "media:import": "node scripts/import-media.mjs",
+    "media:check": "node scripts/media-check.mjs",
     "deploy": "wrangler deploy",
     "migrate:old-site": "python3 scripts/migrate/extract.py && node scripts/migrate/to-markdown.mjs"
   },

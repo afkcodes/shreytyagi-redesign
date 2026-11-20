@@ -38,8 +38,9 @@ Add behaviour by extending these, not by adding a route or component per page.
 - **CSS** lives in `src/styles/global.css` only, built from the tokens at the top. No
   component `<style>` blocks, no inline `style=""`, no CSS frameworks. Hex colours are only
   allowed inside `palette:start` / `palette:end` regions (verify enforces this).
-- **Media paths** go through `asset()` (components) or the `rehypeSite` plugin (Markdown), so
-  they work whether or not the file is in `public/`.
+- **Media paths** go through `asset()` (components) or the `rehypeSite` plugin (Markdown). Both
+  turn a site path into a GitHub URL from `site.config.mjs` (`MEDIA_BASE`), unless the file is in
+  `public/`. Never hard-code a media host; change it only in `site.config.mjs`.
 - **Types:** `npm run check` must pass with zero errors. TypeScript is strict.
 - **Markdown pipeline:** Astro 7's default processor is Sätteri; this project uses
   `unified()` from `@astrojs/markdown-remark` so `remark-math` and `rehype-katex` work. Add

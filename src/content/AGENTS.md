@@ -58,8 +58,11 @@ draft: false                                             # optional; true hides 
 - **Links:** to other pages, use the site path (`/lists/imaxcinemasofindia.html`). To other
   sites, use the full URL.
 - **Images:** `![What the image shows, in a sentence](/articles/name/photo.jpg)`. Alt text is
-  required. Put the file in `public/` at that path, or leave it on the current site (see
-  `PUBLIC_ASSET_BASE` in the README). Prefer `.jpg`/`.webp` under 500 KB.
+  required. The file lives on GitHub in the media repository (`MEDIA_REPO` in
+  `site.config.mjs`, today `shreytyagi/shreytyagi`) at that same path; the build links to it
+  there. Don't put content images in `public/`. If you can't add files to the media
+  repository, say which files need uploading and where. Prefer `.jpg`/`.webp` under 500 KB,
+  and run `npm run media:check`.
 - **Scene breaks:** `---` on its own line renders as `· · ·`.
 - **Tables:** small tables can be Markdown tables. Anything with more than about ten rows, or
   that people will want to sort, belongs in a list (`lists/`) instead.

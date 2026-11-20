@@ -114,11 +114,12 @@ utility pages.
 
 ## Images and downloads
 
-Use the site path (`/articles/x/photo.jpg`). Files in `public/` are served from here;
-anything else is fetched from `PUBLIC_ASSET_BASE`, which defaults to
-`https://shreytyagi.com` while the large photo folders still live on the current site.
-`npm run media:import` copies them all into `public/`; do that before the domain moves
-(`DEPLOY.md`, step 1).
+Images, photo sets and downloads stay on **GitHub**, in the original site's repository
+(`shreytyagi/shreytyagi`); they are not copied into the Cloudflare deploy. Pages use the site
+path (`/articles/x/photo.jpg`) and the build links it to
+`raw.githubusercontent.com/shreytyagi/shreytyagi/main/articles/x/photo.jpg`. The repository,
+branch and URL are set in one place, `site.config.mjs`. `npm run media:check` confirms every
+referenced file exists. Files in `public/` (site assets) are served with the site.
 
 ## How it's built
 
